@@ -1,0 +1,22 @@
+version: "3.4"
+
+services:
+  ai-web-oneapi:
+    image: ccr.ccs.tencentyun.com/aiweb/${APP}:${TAG}
+    container_name: ai-web-oneapi
+    restart: always
+    command: --log-dir /app/logs
+    ports:
+      - "3003:3000"
+    volumes:
+      - ./data:/data
+      - ./logs:/app/logs
+    environment:
+      REDIS_CONN_STRING: redis://10.0.4.2:26379/1
+      SESSION_SECRET: session-m3jp2lcRUiYb5rMUlx
+      SQL_DSN: root:pscale_pw_9da27mIUaHPMNnIXborrDWFI5v5pCTjp8m1NKrwsh4G@tcp(10.10.0.11:3306)/oneapi
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -s http://localhost:3000/api/status | grep -o '\"success\":\\s*true' | awk '{print $2}' | grep 'true'"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
