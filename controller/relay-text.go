@@ -234,7 +234,6 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 				logContent := fmt.Sprintf("模型倍率 %.2f，分组倍率 %.2f", modelRatio, groupRatio)
 				if len(textRequest.Ocr.Image) > 0 || len(textRequest.Ocr.Url) > 0 {
 					logContent = fmt.Sprintf("模型倍率 %.2f，分组倍率 %.2f，其中调用orc消耗点 13000", modelRatio, groupRatio)
-
 				}
 
 				model.RecordConsumeLog(userId, promptTokens, completionTokens, textRequest.Model, tokenName, quota, logContent)
