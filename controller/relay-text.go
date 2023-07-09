@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"one-api/common"
 	"one-api/model"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
@@ -21,12 +22,29 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 	consumeQuota := c.GetBool("consume_quota")
 	group := c.GetString("group")
 	var textRequest GeneralOpenAIRequest
+	var ocrResult string
 	if consumeQuota || channelType == common.ChannelTypeAzure || channelType == common.ChannelTypePaLM {
-		err := common.UnmarshalBodyReusable(c, &textRequest)
+		err := UnmarshalTextBodyReusable(c, &textRequest)
 		if err != nil {
 			return errorWrapper(err, "bind_request_body_failed", http.StatusBadRequest)
 		}
+
+		if len(textRequest.Ocr.Image) > 0 || len(textRequest.Ocr.Url) > 0 {
+			ocrRaw, err := common.GetOcrBaiDu(textRequest.Ocr.Image, textRequest.Ocr.Url)
+			if err != nil {
+				return errorWrapper(err, "get_ocr_result_failed", http.StatusBadRequest)
+			}
+			ocrResult = ocrRaw
+		}
+
+		if len(ocrResult) > 0 {
+			err := UnmarshalTextBodyToGPTRequest(c, ocrResult)
+			if err != nil {
+				return errorWrapper(err, "bind_request_body_failed", http.StatusBadRequest)
+			}
+		}
 	}
+
 	if relayMode == RelayModeModerations && textRequest.Model == "" {
 		textRequest.Model = "text-moderation-latest"
 	}
@@ -190,6 +208,12 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 			if ratio != 0 && quota <= 0 {
 				quota = 1
 			}
+
+			//判断是否是ocr请求 增加token
+			if len(ocrResult) > 0 {
+				quota += 13000
+			}
+
 			totalTokens := promptTokens + completionTokens
 			if totalTokens == 0 {
 				// in this case, must be some error happened
@@ -208,6 +232,11 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 			if quota != 0 {
 				tokenName := c.GetString("token_name")
 				logContent := fmt.Sprintf("模型倍率 %.2f，分组倍率 %.2f", modelRatio, groupRatio)
+				if len(textRequest.Ocr.Image) > 0 || len(textRequest.Ocr.Url) > 0 {
+					logContent = fmt.Sprintf("模型倍率 %.2f，分组倍率 %.2f，其中调用orc消耗点 13000", modelRatio, groupRatio)
+
+				}
+
 				model.RecordConsumeLog(userId, promptTokens, completionTokens, textRequest.Model, tokenName, quota, logContent)
 				model.UpdateUserUsedQuotaAndRequestCount(userId, quota)
 				channelId := c.GetInt("channel_id")

@@ -1,11 +1,15 @@
 package controller
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"io"
 	"net/http"
 	"one-api/common"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Message struct {
@@ -24,11 +28,9 @@ const (
 	RelayModeEdits
 )
 
-// https://platform.openai.com/docs/api-reference/chat
-
-type GeneralOpenAIRequest struct {
-	Model       string    `json:"model,omitempty"`
-	Messages    []Message `json:"messages,omitempty"`
+type OpenAIRequest struct {
+	Model       string    `json:"model"`
+	Messages    []Message `json:"messages"`
 	Prompt      any       `json:"prompt,omitempty"`
 	Stream      bool      `json:"stream,omitempty"`
 	MaxTokens   int       `json:"max_tokens,omitempty"`
@@ -37,6 +39,27 @@ type GeneralOpenAIRequest struct {
 	N           int       `json:"n,omitempty"`
 	Input       any       `json:"input,omitempty"`
 	Instruction string    `json:"instruction,omitempty"`
+}
+
+// https://platform.openai.com/docs/api-reference/chat
+
+type GeneralOpenAIRequest struct {
+	Model       string    `json:"model,omitempty"`
+	Messages    []Message `json:"messages,omitempty"`
+	Ocr         OcrParams `json:"ocr,omitempty"`
+	Prompt      any       `json:"prompt,omitempty"`
+	Stream      bool      `json:"stream,omitempty"`
+	MaxTokens   int       `json:"max_tokens,omitempty"`
+	Temperature float64   `json:"temperature,omitempty"`
+	TopP        float64   `json:"top_p,omitempty"`
+	N           int       `json:"n,omitempty"`
+	Input       any       `json:"input,omitempty"`
+	Instruction string    `json:"instruction,omitempty"`
+}
+
+type OcrParams struct {
+	Image string `json:"image"`
+	Url   string `json:"url"`
 }
 
 type ChatRequest struct {
@@ -154,4 +177,85 @@ func RelayNotFound(c *gin.Context) {
 	c.JSON(http.StatusNotFound, gin.H{
 		"error": err,
 	})
+}
+
+func UnmarshalTextBodyReusable(c *gin.Context, v *GeneralOpenAIRequest) error {
+	requestBody, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		return err
+	}
+	err = c.Request.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(requestBody, v)
+	if err != nil {
+		return err
+	}
+
+	//剔除ocr参数传递给gpt
+	tmp := OpenAIRequest{
+		Model:    v.Model,
+		Messages: v.Messages,
+		Input:    v.Input,
+	}
+
+	if v.MaxTokens > 0 {
+		tmp.MaxTokens = v.MaxTokens
+	}
+
+	if v.Temperature > 0 {
+		tmp.Temperature = v.Temperature
+	}
+
+	if v.Stream {
+		tmp.Stream = v.Stream
+	}
+
+	if v.TopP > 0 {
+		tmp.TopP = v.TopP
+	}
+
+	if v.N > 0 {
+		tmp.N = v.N
+	}
+
+	if len(v.Instruction) > 0 {
+		tmp.Instruction = v.Instruction
+	}
+
+	rawData, _ := json.Marshal(tmp)
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(rawData))
+	return nil
+}
+
+func UnmarshalTextBodyToGPTRequest(c *gin.Context, content string) error {
+	requestBody, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		return err
+	}
+	err = c.Request.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	var data = OpenAIRequest{}
+	err = json.Unmarshal(requestBody, &data)
+	if err != nil {
+		return err
+	}
+
+	data.Messages = append(data.Messages, Message{
+		Role:    `user`,
+		Content: `以下是一张图片中的提取的文本:` + content,
+	})
+
+	requestGpt, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(requestGpt))
+	return nil
 }
