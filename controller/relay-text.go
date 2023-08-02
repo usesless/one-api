@@ -292,7 +292,7 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 									common.SysError("error marshalling stream response: " + err.Error())
 									return
 								}
-								dataChan <- string(data)
+								dataChan <- "data: " + string(data)
 								break
 							}
 						}
@@ -312,7 +312,7 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 									common.SysError("error marshalling stream response: " + err.Error())
 									return
 								}
-								dataChan <- string(data)
+								dataChan <- "data: " + string(data)
 								break
 							}
 						}
