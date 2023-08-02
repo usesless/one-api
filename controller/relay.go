@@ -103,9 +103,9 @@ type OpenAIErrorWithStatusCode struct {
 }
 
 type TextResponse struct {
-	Usage      `json:"usage"`
-	Error      OpenAIError `json:"error"`
-	OcrRawData string      `json:"ocr_raw_data"`
+	Usage `json:"usage"`
+	Error OpenAIError `json:"error"`
+	// OcrRawData string      `json:"ocr_raw_data"`
 }
 
 type OpenAITextResponseChoice struct {
