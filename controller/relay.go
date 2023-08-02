@@ -4,10 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-<<<<<<< HEAD
 	"io"
-=======
->>>>>>> upstream/main
 	"net/http"
 	"one-api/common"
 	"strconv"
@@ -152,12 +149,12 @@ type ChatCompletionsStreamResponseChoice struct {
 }
 
 type ChatCompletionsStreamResponse struct {
-	Id      string                                `json:"id"`
-	Object  string                                `json:"object"`
-	Created int64                                 `json:"created"`
-	Model   string                                `json:"model"`
-	Choices []ChatCompletionsStreamResponseChoice `json:"choices"`
-	OcrRawData string `json:"ocr_raw_data"`
+	Id         string                                `json:"id"`
+	Object     string                                `json:"object"`
+	Created    int64                                 `json:"created"`
+	Model      string                                `json:"model"`
+	Choices    []ChatCompletionsStreamResponseChoice `json:"choices"`
+	OcrRawData string                                `json:"ocr_raw_data"`
 }
 
 type CompletionsStreamResponse struct {
