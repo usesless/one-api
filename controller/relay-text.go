@@ -398,9 +398,10 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 				return err
 			}
 			// 如果有ocr参数
-			if len(ocrResult) > 0 {
-				textResponse.OcrRawData = ocrResult
-			}
+			// if len(ocrResult) > 0 {
+
+			// }
+			textResponse.OcrRawData = ocrResult
 			if usage != nil {
 				textResponse.Usage = *usage
 			}
