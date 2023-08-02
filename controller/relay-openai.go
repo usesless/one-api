@@ -79,6 +79,7 @@ func openaiStreamHandler(c *gin.Context, resp *http.Response, relayMode int) (*O
 				}
 				dataChan <- rawData
 			}
+			dataChan <- data
 		}
 		stopChan <- true
 	}()
