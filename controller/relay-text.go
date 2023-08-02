@@ -276,6 +276,8 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 					switch relayMode {
 					case RelayModeChatCompletions:
 						var streamResponse ChatCompletionsStreamResponse
+						streamResponse.OcrRawData = ocrResult
+
 						err = json.Unmarshal([]byte(data), &streamResponse)
 						if err != nil {
 							common.SysError("error unmarshalling stream response: " + err.Error())
@@ -284,7 +286,9 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 						for _, choice := range streamResponse.Choices {
 							streamResponseText += choice.Delta.Content
 							if strings.Contains(choice.FinishReason, `stop`) {
-								streamResponse.OcrRawData = ocrResult
+								// streamResponse.OcrRawData = ocrResult
+								streamResponseText += streamResponse.OcrRawData
+								break
 							}
 						}
 					case RelayModeCompletions:
@@ -297,7 +301,9 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 						for _, choice := range streamResponse.Choices {
 							streamResponseText += choice.Text
 							if strings.Contains(choice.FinishReason, `stop`) {
-								streamResponse.OcrRawData = ocrResult
+								// streamResponse.OcrRawData = ocrResult
+								streamResponseText += streamResponse.OcrRawData
+								break
 							}
 						}
 					}
