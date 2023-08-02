@@ -110,6 +110,7 @@ func openaiStreamHandler(c *gin.Context, resp *http.Response, relayMode int) (*O
 
 func openaiHandler(c *gin.Context, resp *http.Response, consumeQuota bool) (*OpenAIErrorWithStatusCode, *Usage) {
 	var textResponse TextResponse
+	var newBody []byte
 	if consumeQuota {
 		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -123,6 +124,11 @@ func openaiHandler(c *gin.Context, resp *http.Response, consumeQuota bool) (*Ope
 		if err != nil {
 			return errorWrapper(err, "unmarshal_response_body_failed", http.StatusInternalServerError), nil
 		}
+		textResponse.OcrRawData = c.GetString("ocr_result")
+		newBody, err = json.Marshal(textResponse)
+		if err != nil {
+			return errorWrapper(err, "unmarshal_response_body_failed", http.StatusInternalServerError), nil
+		}
 		if textResponse.Error.Type != "" {
 			return &OpenAIErrorWithStatusCode{
 				OpenAIError: textResponse.Error,
@@ -131,7 +137,7 @@ func openaiHandler(c *gin.Context, resp *http.Response, consumeQuota bool) (*Ope
 		}
 
 		// Reset response body
-		resp.Body = io.NopCloser(bytes.NewBuffer(responseBody))
+		resp.Body = io.NopCloser(bytes.NewBuffer(newBody))
 	}
 	// We shouldn't set the header before we parse the response body, because the parse part may fail.
 	// And then we will have to send an error response, but in this case, the header has already been set.
