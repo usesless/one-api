@@ -41,7 +41,8 @@ func openaiStreamHandler(c *gin.Context, resp *http.Response, relayMode int) (*O
 			if data[:6] != "data: " && data[:6] != "[DONE]" {
 				continue
 			}
-			dataChan <- data
+			// dataChan <- data
+			rawData := data
 			data = data[6:]
 			if !strings.HasPrefix(data, "[DONE]") {
 				switch relayMode {
@@ -58,6 +59,8 @@ func openaiStreamHandler(c *gin.Context, resp *http.Response, relayMode int) (*O
 							streamResponse.OcrRawData = ocrResult
 						}
 					}
+					streamData, _ := json.Marshal(streamResponse)
+					rawData = `data: ` + string(streamData)
 				case RelayModeCompletions:
 					var streamResponse CompletionsStreamResponse
 					err := json.Unmarshal([]byte(data), &streamResponse)
@@ -71,7 +74,10 @@ func openaiStreamHandler(c *gin.Context, resp *http.Response, relayMode int) (*O
 							streamResponse.OcrRawData = ocrResult
 						}
 					}
+					streamData, _ := json.Marshal(streamResponse)
+					rawData = `data: ` + string(streamData)
 				}
+				dataChan <- rawData
 			}
 		}
 		stopChan <- true
