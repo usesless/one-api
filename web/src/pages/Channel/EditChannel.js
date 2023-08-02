@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Header, Message, Segment } from 'semantic-ui-react';
+import { Button, Form, Header, Input, Message, Segment } from 'semantic-ui-react';
 import { useParams } from 'react-router-dom';
 import { API, showError, showInfo, showSuccess, verifyJSON } from '../../helpers';
 import { CHANNEL_OPTIONS } from '../../constants';
@@ -27,12 +27,38 @@ const EditChannel = () => {
   };
   const [batch, setBatch] = useState(false);
   const [inputs, setInputs] = useState(originInputs);
+  const [originModelOptions, setOriginModelOptions] = useState([]);
   const [modelOptions, setModelOptions] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
   const [basicModels, setBasicModels] = useState([]);
   const [fullModels, setFullModels] = useState([]);
+  const [customModel, setCustomModel] = useState('');
   const handleInputChange = (e, { name, value }) => {
     setInputs((inputs) => ({ ...inputs, [name]: value }));
+    if (name === 'type' && inputs.models.length === 0) {
+      let localModels = [];
+      switch (value) {
+        case 14:
+          localModels = ['claude-instant-1', 'claude-2'];
+          break;
+        case 11:
+          localModels = ['PaLM-2'];
+          break;
+        case 15:
+          localModels = ['ERNIE-Bot', 'ERNIE-Bot-turbo', 'Embedding-V1'];
+          break;
+        case 17:
+          localModels = ['qwen-v1', 'qwen-plus-v1'];
+          break;
+        case 16:
+          localModels = ['chatglm_pro', 'chatglm_std', 'chatglm_lite'];
+          break;
+        case 18:
+          localModels = ['SparkDesk'];
+          break;
+      }
+      setInputs((inputs) => ({ ...inputs, models: localModels }));
+    }
   };
 
   const loadChannel = async () => {
@@ -62,13 +88,16 @@ const EditChannel = () => {
   const fetchModels = async () => {
     try {
       let res = await API.get(`/api/channel/models`);
-      setModelOptions(res.data.data.map((model) => ({
+      let localModelOptions = res.data.data.map((model) => ({
         key: model.id,
         text: model.id,
         value: model.id
-      })));
+      }));
+      setOriginModelOptions(localModelOptions);
       setFullModels(res.data.data.map((model) => model.id));
-      setBasicModels(res.data.data.filter((model) => !model.id.startsWith('gpt-4')).map((model) => model.id));
+      setBasicModels(res.data.data.filter((model) => {
+        return model.id.startsWith('gpt-3') || model.id.startsWith('text-');
+      }).map((model) => model.id));
     } catch (error) {
       showError(error.message);
     }
@@ -86,6 +115,20 @@ const EditChannel = () => {
       showError(error.message);
     }
   };
+
+  useEffect(() => {
+    let localModelOptions = [...originModelOptions];
+    inputs.models.forEach((model) => {
+      if (!localModelOptions.find((option) => option.key === model)) {
+        localModelOptions.push({
+          key: model,
+          text: model,
+          value: model
+        });
+      }
+    });
+    setModelOptions(localModelOptions);
+  }, [originModelOptions, inputs.models]);
 
   useEffect(() => {
     if (isEdit) {
@@ -113,7 +156,10 @@ const EditChannel = () => {
       localInputs.base_url = localInputs.base_url.slice(0, localInputs.base_url.length - 1);
     }
     if (localInputs.type === 3 && localInputs.other === '') {
-      localInputs.other = '2023-03-15-preview';
+      localInputs.other = '2023-06-01-preview';
+    }
+    if (localInputs.model_mapping === '') {
+      localInputs.model_mapping = '{}';
     }
     let res;
     localInputs.models = localInputs.models.join(',');
@@ -173,7 +219,7 @@ const EditChannel = () => {
                   <Form.Input
                     label='默认 API 版本'
                     name='other'
-                    placeholder={'请输入默认 API 版本，例如：2023-03-15-preview，该配置可以被实际的请求查询参数所覆盖'}
+                    placeholder={'请输入默认 API 版本，例如：2023-06-01-preview，该配置可以被实际的请求查询参数所覆盖'}
                     onChange={handleInputChange}
                     value={inputs.other}
                     autoComplete='new-password'
@@ -196,26 +242,12 @@ const EditChannel = () => {
               </Form.Field>
             )
           }
-          {
-            inputs.type !== 3 && inputs.type !== 8 && (
-              <Form.Field>
-                <Form.Input
-                  label='镜像'
-                  name='base_url'
-                  placeholder={'此项可选，输入镜像站地址，格式为：https://domain.com'}
-                  onChange={handleInputChange}
-                  value={inputs.base_url}
-                  autoComplete='new-password'
-                />
-              </Form.Field>
-            )
-          }
           <Form.Field>
             <Form.Input
               label='名称'
               required
               name='name'
-              placeholder={'请输入名称'}
+              placeholder={'请为渠道命名'}
               onChange={handleInputChange}
               value={inputs.name}
               autoComplete='new-password'
@@ -224,7 +256,7 @@ const EditChannel = () => {
           <Form.Field>
             <Form.Dropdown
               label='分组'
-              placeholder={'请选择分组'}
+              placeholder={'请选择可以使用该渠道的分组'}
               name='groups'
               required
               fluid
@@ -241,7 +273,7 @@ const EditChannel = () => {
           <Form.Field>
             <Form.Dropdown
               label='模型'
-              placeholder={'请选择该通道所支持的模型'}
+              placeholder={'请选择该渠道所支持的模型'}
               name='models'
               required
               fluid
@@ -263,11 +295,37 @@ const EditChannel = () => {
             <Button type={'button'} onClick={() => {
               handleInputChange(null, { name: 'models', value: [] });
             }}>清除所有模型</Button>
+            <Input
+              action={
+                <Button type={'button'} onClick={() => {
+                  if (customModel.trim() === '') return;
+                  if (inputs.models.includes(customModel)) return;
+                  let localModels = [...inputs.models];
+                  localModels.push(customModel);
+                  let localModelOptions = [];
+                  localModelOptions.push({
+                    key: customModel,
+                    text: customModel,
+                    value: customModel
+                  });
+                  setModelOptions(modelOptions => {
+                    return [...modelOptions, ...localModelOptions];
+                  });
+                  setCustomModel('');
+                  handleInputChange(null, { name: 'models', value: localModels });
+                }}>填入</Button>
+              }
+              placeholder='输入自定义模型名称'
+              value={customModel}
+              onChange={(e, { value }) => {
+                setCustomModel(value);
+              }}
+            />
           </div>
           <Form.Field>
             <Form.TextArea
-              label='模型映射'
-              placeholder={`此项可选，为一个 JSON 文本，键为用户请求的模型名称，值为要替换的模型名称，例如：\n${JSON.stringify(MODEL_MAPPING_EXAMPLE, null, 2)}`}
+              label='模型重定向'
+              placeholder={`此项可选，用于修改请求体中的模型名称，为一个 JSON 字符串，键为请求中模型名称，值为要替换的模型名称，例如：\n${JSON.stringify(MODEL_MAPPING_EXAMPLE, null, 2)}`}
               name='model_mapping'
               onChange={handleInputChange}
               value={inputs.model_mapping}
@@ -292,7 +350,7 @@ const EditChannel = () => {
                 label='密钥'
                 name='key'
                 required
-                placeholder={'请输入密钥'}
+                placeholder={inputs.type === 15 ? '请输入 access token，当前版本暂不支持自动刷新，请每 30 天更新一次' : (inputs.type === 18 ? '按照如下格式输入：APPID|APISecret|APIKey' : '请输入渠道对应的鉴权密钥')}
                 onChange={handleInputChange}
                 value={inputs.key}
                 autoComplete='new-password'
@@ -309,7 +367,21 @@ const EditChannel = () => {
               />
             )
           }
-          <Button positive onClick={submit}>提交</Button>
+          {
+            inputs.type !== 3 && inputs.type !== 8 && (
+              <Form.Field>
+                <Form.Input
+                  label='镜像'
+                  name='base_url'
+                  placeholder={'此项可选，用于通过镜像站来进行 API 调用，请输入镜像站地址，格式为：https://domain.com'}
+                  onChange={handleInputChange}
+                  value={inputs.base_url}
+                  autoComplete='new-password'
+                />
+              </Form.Field>
+            )
+          }
+          <Button type={isEdit ? 'button' : 'submit'} positive onClick={submit}>提交</Button>
         </Form>
       </Segment>
     </>

@@ -11,7 +11,7 @@
 
 # One API
 
-_✨ All in one 的 OpenAI 接口，整合各种 API 访问方式，开箱即用✨_
+_✨ 通过标准的 OpenAI API 格式访问所有的大模型，开箱即用 ✨_
 
 </div>
 
@@ -58,39 +58,45 @@ _✨ All in one 的 OpenAI 接口，整合各种 API 访问方式，开箱即用
 > **Warning**：从 `v0.3` 版本升级到 `v0.4` 版本需要手动迁移数据库，请手动执行[数据库迁移脚本](./bin/migration_v0.3-v0.4.sql)。
 
 ## 功能
-1. 支持多种 API 访问渠道：
-   + [x] OpenAI 官方通道（支持配置镜像）
-   + [x] **Azure OpenAI API**
-   + [x] [API Distribute](https://api.gptjk.top/register?aff=QGxj)
+1. 支持多种大模型：
+   + [x] [OpenAI ChatGPT 系列模型](https://platform.openai.com/docs/guides/gpt/chat-completions-api)（支持 [Azure OpenAI API](https://learn.microsoft.com/en-us/azure/ai-services/openai/reference)）
+   + [x] [Anthropic Claude 系列模型](https://anthropic.com)
+   + [x] [Google PaLM2 系列模型](https://developers.generativeai.google)
+   + [x] [百度文心一言系列模型](https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html)
+   + [x] [阿里通义千问系列模型](https://help.aliyun.com/document_detail/2400395.html)
+   + [x] [讯飞星火认知大模型](https://www.xfyun.cn/doc/spark/Web.html)
+   + [x] [智谱 ChatGLM 系列模型](https://bigmodel.cn)
+2. 支持配置镜像以及众多第三方代理服务：
    + [x] [OpenAI-SB](https://openai-sb.com)
    + [x] [API2D](https://api2d.com/r/197971)
    + [x] [OhMyGPT](https://aigptx.top?aff=uFpUl2Kf)
    + [x] [AI Proxy](https://aiproxy.io/?i=OneAPI) （邀请码：`OneAPI`）
    + [x] [CloseAI](https://console.closeai-asia.com/r/2412)
    + [x] 自定义渠道：例如各种未收录的第三方代理服务
-2. 支持通过**负载均衡**的方式访问多个渠道。
-3. 支持 **stream 模式**，可以通过流式传输实现打字机效果。
-4. 支持**多机部署**，[详见此处](#多机部署)。
-5. 支持**令牌管理**，设置令牌的过期时间和额度。
-6. 支持**兑换码管理**，支持批量生成和导出兑换码，可使用兑换码为账户进行充值。
-7. 支持**通道管理**，批量创建通道。
-8. 支持**用户分组**以及**渠道分组**，支持为不同分组设置不同的倍率。
-9. 支持渠道**设置模型列表**。
-10. 支持**查看额度明细**。
-11. 支持**用户邀请奖励**。
-12. 支持以美元为单位显示额度。
-13. 支持发布公告，设置充值链接，设置新用户初始额度。
-14. 支持模型映射，重定向用户的请求模型。
-15. 支持丰富的**自定义**设置，
+3. 支持通过**负载均衡**的方式访问多个渠道。
+4. 支持 **stream 模式**，可以通过流式传输实现打字机效果。
+5. 支持**多机部署**，[详见此处](#多机部署)。
+6. 支持**令牌管理**，设置令牌的过期时间和额度。
+7. 支持**兑换码管理**，支持批量生成和导出兑换码，可使用兑换码为账户进行充值。
+8. 支持**通道管理**，批量创建通道。
+9. 支持**用户分组**以及**渠道分组**，支持为不同分组设置不同的倍率。
+10. 支持渠道**设置模型列表**。
+11. 支持**查看额度明细**。
+12. 支持**用户邀请奖励**。
+13. 支持以美元为单位显示额度。
+14. 支持发布公告，设置充值链接，设置新用户初始额度。
+15. 支持模型映射，重定向用户的请求模型。
+16. 支持失败自动重试。
+17. 支持绘图接口。
+18. 支持丰富的**自定义**设置，
     1. 支持自定义系统名称，logo 以及页脚。
     2. 支持自定义首页和关于页面，可以选择使用 HTML & Markdown 代码进行自定义，或者使用一个单独的网页通过 iframe 嵌入。
-16. 支持通过系统访问令牌访问管理 API。
-17. 支持 Cloudflare Turnstile 用户校验。
-18. 支持用户管理，支持**多种用户登录注册方式**：
-    + 邮箱登录注册以及通过邮箱进行密码重置。
+19. 支持通过系统访问令牌访问管理 API。
+20. 支持 Cloudflare Turnstile 用户校验。
+21. 支持用户管理，支持**多种用户登录注册方式**：
+    + 邮箱登录注册（支持注册邮箱白名单）以及通过邮箱进行密码重置。
     + [GitHub 开放授权](https://github.com/settings/applications/new)。
     + 微信公众号授权（需要额外部署 [WeChat Server](https://github.com/songquanpeng/wechat-server)）。
-19. 未来其他大模型开放 API 后，将第一时间支持，并将其封装成同样的 API 访问方式。
 
 ## 部署
 ### 基于 Docker 进行部署
@@ -189,7 +195,7 @@ sudo service nginx restart
 docker run --name chat-next-web -d -p 3001:3000 yidadaa/chatgpt-next-web
 ```
 
-注意修改端口号和 `BASE_URL`。
+注意修改端口号，之后在页面上设置接口地址（例如：https://openai.justsong.cn/ ）和 API Key 即可。
 
 #### ChatGPT Web
 项目主页：https://github.com/Chanzhaoyu/chatgpt-web
@@ -308,6 +314,7 @@ https://openai.justsong.cn
    + 额度 = 分组倍率 * 模型倍率 * （提示 token 数 + 补全 token 数 * 补全倍率）
    + 其中补全倍率对于 GPT3.5 固定为 1.33，GPT4 为 2，与官方保持一致。
    + 如果是非流模式，官方接口会返回消耗的总 token，但是你要注意提示和补全的消耗倍率不一样。
+   + 注意，One API 的默认倍率就是官方倍率，是已经调整过的。
 2. 账户额度足够为什么提示额度不足？
    + 请检查你的令牌额度是否足够，这个和账户额度是分开的。
    + 令牌额度仅供用户设置最大使用量，用户可自由设置。

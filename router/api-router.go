@@ -1,10 +1,11 @@
 package router
 
 import (
-	"github.com/gin-contrib/gzip"
-	"github.com/gin-gonic/gin"
 	"one-api/controller"
 	"one-api/middleware"
+
+	"github.com/gin-contrib/gzip"
+	"github.com/gin-gonic/gin"
 )
 
 func SetApiRouter(router *gin.Engine) {
@@ -35,7 +36,7 @@ func SetApiRouter(router *gin.Engine) {
 			{
 				selfRoute.GET("/self", controller.GetSelf)
 				selfRoute.PUT("/self", controller.UpdateSelf)
-				selfRoute.DELETE("/self", controller.DeleteSelf)
+				selfRoute.DELETE("/self", middleware.TurnstileCheck(), controller.DeleteSelf)
 				selfRoute.GET("/token", controller.GenerateAccessToken)
 				selfRoute.GET("/aff", controller.GetAffCode)
 				selfRoute.POST("/topup", controller.TopUp)

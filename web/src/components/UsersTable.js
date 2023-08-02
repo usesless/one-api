@@ -226,7 +226,8 @@ const UsersTable = () => {
                     <Popup
                       content={user.email ? user.email : '未绑定邮箱地址'}
                       key={user.username}
-                      trigger={<span>{renderText(user.username, 10)}</span>}
+                      header={user.display_name ? user.display_name : user.username}
+                      trigger={<span>{renderText(user.username, 15)}</span>}
                       hoverable
                     />
                   </Table.Cell>

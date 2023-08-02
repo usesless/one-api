@@ -39,6 +39,8 @@ func InitOptionMap() {
 	common.OptionMap["DisplayInCurrencyEnabled"] = strconv.FormatBool(common.DisplayInCurrencyEnabled)
 	common.OptionMap["DisplayTokenStatEnabled"] = strconv.FormatBool(common.DisplayTokenStatEnabled)
 	common.OptionMap["ChannelDisableThreshold"] = strconv.FormatFloat(common.ChannelDisableThreshold, 'f', -1, 64)
+	common.OptionMap["EmailDomainRestrictionEnabled"] = strconv.FormatBool(common.EmailDomainRestrictionEnabled)
+	common.OptionMap["EmailDomainWhitelist"] = strings.Join(common.EmailDomainWhitelist, ",")
 	common.OptionMap["SMTPServer"] = ""
 	common.OptionMap["SMTPFrom"] = ""
 	common.OptionMap["SMTPPort"] = strconv.Itoa(common.SMTPPort)
@@ -68,6 +70,7 @@ func InitOptionMap() {
 	common.OptionMap["TopUpLink"] = common.TopUpLink
 	common.OptionMap["ChatLink"] = common.ChatLink
 	common.OptionMap["QuotaPerUnit"] = strconv.FormatFloat(common.QuotaPerUnit, 'f', -1, 64)
+	common.OptionMap["RetryTimes"] = strconv.Itoa(common.RetryTimes)
 	common.OptionMapRWMutex.Unlock()
 	loadOptionsFromDatabase()
 }
@@ -140,6 +143,8 @@ func updateOptionMap(key string, value string) (err error) {
 			common.TurnstileCheckEnabled = boolValue
 		case "RegisterEnabled":
 			common.RegisterEnabled = boolValue
+		case "EmailDomainRestrictionEnabled":
+			common.EmailDomainRestrictionEnabled = boolValue
 		case "AutomaticDisableChannelEnabled":
 			common.AutomaticDisableChannelEnabled = boolValue
 		case "ApproximateTokenEnabled":
@@ -153,6 +158,8 @@ func updateOptionMap(key string, value string) (err error) {
 		}
 	}
 	switch key {
+	case "EmailDomainWhitelist":
+		common.EmailDomainWhitelist = strings.Split(value, ",")
 	case "SMTPServer":
 		common.SMTPServer = value
 	case "SMTPPort":
@@ -196,6 +203,8 @@ func updateOptionMap(key string, value string) (err error) {
 		common.QuotaRemindThreshold, _ = strconv.Atoi(value)
 	case "PreConsumedQuota":
 		common.PreConsumedQuota, _ = strconv.Atoi(value)
+	case "RetryTimes":
+		common.RetryTimes, _ = strconv.Atoi(value)
 	case "ModelRatio":
 		err = common.UpdateModelRatioByJSONString(value)
 	case "GroupRatio":

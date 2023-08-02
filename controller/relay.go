@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+<<<<<<< HEAD
 	"io"
+=======
+>>>>>>> upstream/main
 	"net/http"
 	"one-api/common"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -39,6 +43,7 @@ type OpenAIRequest struct {
 	N           int       `json:"n,omitempty"`
 	Input       any       `json:"input,omitempty"`
 	Instruction string    `json:"instruction,omitempty"`
+	Size        string    `json:"size,omitempty"`
 }
 
 // https://platform.openai.com/docs/api-reference/chat
@@ -76,6 +81,12 @@ type TextRequest struct {
 	//Stream   bool      `json:"stream"`
 }
 
+type ImageRequest struct {
+	Prompt string `json:"prompt"`
+	N      int    `json:"n"`
+	Size   string `json:"size"`
+}
+
 type Usage struct {
 	PromptTokens     int `json:"prompt_tokens"`
 	CompletionTokens int `json:"completion_tokens"`
@@ -99,13 +110,53 @@ type TextResponse struct {
 	Error OpenAIError `json:"error"`
 }
 
+type OpenAITextResponseChoice struct {
+	Index        int `json:"index"`
+	Message      `json:"message"`
+	FinishReason string `json:"finish_reason"`
+}
+
+type OpenAITextResponse struct {
+	Id      string                     `json:"id"`
+	Object  string                     `json:"object"`
+	Created int64                      `json:"created"`
+	Choices []OpenAITextResponseChoice `json:"choices"`
+	Usage   `json:"usage"`
+}
+
+type OpenAIEmbeddingResponseItem struct {
+	Object    string    `json:"object"`
+	Index     int       `json:"index"`
+	Embedding []float64 `json:"embedding"`
+}
+
+type OpenAIEmbeddingResponse struct {
+	Object string                        `json:"object"`
+	Data   []OpenAIEmbeddingResponseItem `json:"data"`
+	Model  string                        `json:"model"`
+	Usage  `json:"usage"`
+}
+
+type ImageResponse struct {
+	Created int `json:"created"`
+	Data    []struct {
+		Url string `json:"url"`
+	}
+}
+
+type ChatCompletionsStreamResponseChoice struct {
+	Delta struct {
+		Content string `json:"content"`
+	} `json:"delta"`
+	FinishReason string `json:"finish_reason,omitempty"`
+}
+
 type ChatCompletionsStreamResponse struct {
-	Choices []struct {
-		Delta struct {
-			Content string `json:"content"`
-		} `json:"delta"`
-		FinishReason string `json:"finish_reason"`
-	} `json:"choices"`
+	Id      string                                `json:"id"`
+	Object  string                                `json:"object"`
+	Created int64                                 `json:"created"`
+	Model   string                                `json:"model"`
+	Choices []ChatCompletionsStreamResponseChoice `json:"choices"`
 	OcrRawData string `json:"ocr_raw_data"`
 }
 
@@ -125,6 +176,8 @@ func Relay(c *gin.Context) {
 		relayMode = RelayModeCompletions
 	} else if strings.HasPrefix(c.Request.URL.Path, "/v1/embeddings") {
 		relayMode = RelayModeEmbeddings
+	} else if strings.HasSuffix(c.Request.URL.Path, "embeddings") {
+		relayMode = RelayModeEmbeddings
 	} else if strings.HasPrefix(c.Request.URL.Path, "/v1/moderations") {
 		relayMode = RelayModeModerations
 	} else if strings.HasPrefix(c.Request.URL.Path, "/v1/images/generations") {
@@ -140,16 +193,25 @@ func Relay(c *gin.Context) {
 		err = relayTextHelper(c, relayMode)
 	}
 	if err != nil {
-		if err.StatusCode == http.StatusTooManyRequests {
-			err.OpenAIError.Message = "当前分组负载已饱和，请稍后再试，或升级账户以提升服务质量。"
+		retryTimesStr := c.Query("retry")
+		retryTimes, _ := strconv.Atoi(retryTimesStr)
+		if retryTimesStr == "" {
+			retryTimes = common.RetryTimes
 		}
-		c.JSON(err.StatusCode, gin.H{
-			"error": err.OpenAIError,
-		})
+		if retryTimes > 0 {
+			c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s?retry=%d", c.Request.URL.Path, retryTimes-1))
+		} else {
+			if err.StatusCode == http.StatusTooManyRequests {
+				err.OpenAIError.Message = "当前分组负载已饱和，请稍后再试，或升级账户以提升服务质量。"
+			}
+			c.JSON(err.StatusCode, gin.H{
+				"error": err.OpenAIError,
+			})
+		}
 		channelId := c.GetInt("channel_id")
 		common.SysError(fmt.Sprintf("relay error (channel #%d): %s", channelId, err.Message))
 		// https://platform.openai.com/docs/guides/error-codes/api-errors
-		if common.AutomaticDisableChannelEnabled && (err.Type == "insufficient_quota" || err.Code == "invalid_api_key") {
+		if shouldDisableChannel(&err.OpenAIError) {
 			channelId := c.GetInt("channel_id")
 			channelName := c.GetString("channel_name")
 			disableChannel(channelId, channelName, err.Message)

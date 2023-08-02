@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -53,6 +54,15 @@ func init() {
 	})
 	// https://platform.openai.com/docs/models/model-endpoint-compatibility
 	openAIModels = []OpenAIModels{
+		{
+			Id:         "dall-e",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "openai",
+			Permission: permission,
+			Root:       "dall-e",
+			Parent:     nil,
+		},
 		{
 			Id:         "gpt-3.5-turbo",
 			Object:     "model",
@@ -240,6 +250,114 @@ func init() {
 			OwnedBy:    "openai",
 			Permission: permission,
 			Root:       "code-davinci-edit-001",
+			Parent:     nil,
+		},
+		{
+			Id:         "claude-instant-1",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "anturopic",
+			Permission: permission,
+			Root:       "claude-instant-1",
+			Parent:     nil,
+		},
+		{
+			Id:         "claude-2",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "anturopic",
+			Permission: permission,
+			Root:       "claude-2",
+			Parent:     nil,
+		},
+		{
+			Id:         "ERNIE-Bot",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "baidu",
+			Permission: permission,
+			Root:       "ERNIE-Bot",
+			Parent:     nil,
+		},
+		{
+			Id:         "ERNIE-Bot-turbo",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "baidu",
+			Permission: permission,
+			Root:       "ERNIE-Bot-turbo",
+			Parent:     nil,
+		},
+		{
+			Id:         "Embedding-V1",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "baidu",
+			Permission: permission,
+			Root:       "Embedding-V1",
+			Parent:     nil,
+		},
+		{
+			Id:         "PaLM-2",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "google",
+			Permission: permission,
+			Root:       "PaLM-2",
+			Parent:     nil,
+		},
+		{
+			Id:         "chatglm_pro",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "zhipu",
+			Permission: permission,
+			Root:       "chatglm_pro",
+			Parent:     nil,
+		},
+		{
+			Id:         "chatglm_std",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "zhipu",
+			Permission: permission,
+			Root:       "chatglm_std",
+			Parent:     nil,
+		},
+		{
+			Id:         "chatglm_lite",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "zhipu",
+			Permission: permission,
+			Root:       "chatglm_lite",
+			Parent:     nil,
+		},
+		{
+			Id:         "qwen-v1",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "ali",
+			Permission: permission,
+			Root:       "qwen-v1",
+			Parent:     nil,
+		},
+		{
+			Id:         "qwen-plus-v1",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "ali",
+			Permission: permission,
+			Root:       "qwen-plus-v1",
+			Parent:     nil,
+		},
+		{
+			Id:         "SparkDesk",
+			Object:     "model",
+			Created:    1677649963,
+			OwnedBy:    "xunfei",
+			Permission: permission,
+			Root:       "SparkDesk",
 			Parent:     nil,
 		},
 	}

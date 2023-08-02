@@ -4,9 +4,11 @@ import "encoding/json"
 
 // ModelRatio
 // https://platform.openai.com/docs/models/model-endpoint-compatibility
+// https://cloud.baidu.com/doc/WENXINWORKSHOP/s/Blfmc9dlf
 // https://openai.com/pricing
 // TODO: when a new api is enabled, check the pricing here
 // 1 === $0.002 / 1K tokens
+// 1 === ￥0.014 / 1k tokens
 var ModelRatio = map[string]float64{
 	"gpt-4":                   15,
 	"gpt-4-0314":              15,
@@ -35,6 +37,19 @@ var ModelRatio = map[string]float64{
 	"text-search-ada-doc-001": 10,
 	"text-moderation-stable":  0.1,
 	"text-moderation-latest":  0.1,
+	"dall-e":                  8,
+	"claude-instant-1":        0.75,
+	"claude-2":                30,
+	"ERNIE-Bot":               0.8572, // ￥0.012 / 1k tokens
+	"ERNIE-Bot-turbo":         0.5715, // ￥0.008 / 1k tokens
+	"Embedding-V1":            0.1429, // ￥0.002 / 1k tokens
+	"PaLM-2":                  1,
+	"chatglm_pro":             0.7143, // ￥0.01 / 1k tokens
+	"chatglm_std":             0.3572, // ￥0.005 / 1k tokens
+	"chatglm_lite":            0.1429, // ￥0.002 / 1k tokens
+	"qwen-v1":                 0.8572, // TBD: https://help.aliyun.com/document_detail/2399482.html?spm=a2c4g.2399482.0.0.1ad347feilAgag
+	"qwen-plus-v1":            0.5715, // Same as above
+	"SparkDesk":               0.8572, // TBD
 }
 
 func ModelRatio2JSONString() string {
