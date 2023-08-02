@@ -109,9 +109,9 @@ func openaiStreamHandler(c *gin.Context, resp *http.Response, relayMode int) (*O
 }
 
 func openaiHandler(c *gin.Context, resp *http.Response, consumeQuota bool) (*OpenAIErrorWithStatusCode, *Usage) {
+	var textResponse TextResponse
 	ocrResult := c.GetString("ocr_result")
 	if consumeQuota {
-		var textResponse TextResponse
 		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errorWrapper(err, "read_response_body_failed", http.StatusInternalServerError), nil
