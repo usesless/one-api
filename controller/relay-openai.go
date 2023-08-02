@@ -57,10 +57,10 @@ func openaiStreamHandler(c *gin.Context, resp *http.Response, relayMode int) (*O
 						responseText += choice.Delta.Content
 						if strings.Contains(choice.FinishReason, `stop`) {
 							streamResponse.OcrRawData = ocrResult
+							streamData, _ := json.Marshal(streamResponse)
+							rawData = `data: ` + string(streamData)
 						}
 					}
-					streamData, _ := json.Marshal(streamResponse)
-					rawData = `data: ` + string(streamData)
 				case RelayModeCompletions:
 					var streamResponse CompletionsStreamResponse
 					err := json.Unmarshal([]byte(data), &streamResponse)
@@ -72,14 +72,13 @@ func openaiStreamHandler(c *gin.Context, resp *http.Response, relayMode int) (*O
 						responseText += choice.Text
 						if strings.Contains(choice.FinishReason, `stop`) {
 							streamResponse.OcrRawData = ocrResult
+							streamData, _ := json.Marshal(streamResponse)
+							rawData = `data: ` + string(streamData)
 						}
 					}
-					streamData, _ := json.Marshal(streamResponse)
-					rawData = `data: ` + string(streamData)
 				}
-				dataChan <- rawData
 			}
-			dataChan <- data
+			dataChan <- rawData
 		}
 		stopChan <- true
 	}()
