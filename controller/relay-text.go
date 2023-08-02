@@ -276,7 +276,6 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 					switch relayMode {
 					case RelayModeChatCompletions:
 						var streamResponse ChatCompletionsStreamResponse
-						streamResponse.OcrRawData = ocrResult
 
 						err = json.Unmarshal([]byte(data), &streamResponse)
 						if err != nil {
@@ -286,8 +285,14 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 						for _, choice := range streamResponse.Choices {
 							streamResponseText += choice.Delta.Content
 							if strings.Contains(choice.FinishReason, `stop`) {
-								// streamResponse.OcrRawData = ocrResult
-								streamResponseText += streamResponse.OcrRawData
+								streamResponse.OcrRawData = ocrResult
+								// 重新序列化，发送给dataChan
+								data, err = json.Marshal(streamResponse)
+								if err != nil {
+									common.SysError("error marshalling stream response: " + err.Error())
+									return
+								}
+								dataChan <- string(data)
 								break
 							}
 						}
@@ -301,12 +306,15 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 						for _, choice := range streamResponse.Choices {
 							streamResponseText += choice.Text
 							if strings.Contains(choice.FinishReason, `stop`) {
-								// streamResponse.OcrRawData = ocrResult
-								streamResponseText += streamResponse.OcrRawData
+								streamResponse.OcrRawData = ocrResult
+								if err != nil {
+									common.SysError("error marshalling stream response: " + err.Error())
+									return
+								}
+								dataChan <- string(data)
 								break
 							}
 						}
-					}
 				}
 			}
 			stopChan <- true
