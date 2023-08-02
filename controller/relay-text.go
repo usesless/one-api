@@ -307,6 +307,7 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 							streamResponseText += choice.Text
 							if strings.Contains(choice.FinishReason, `stop`) {
 								streamResponse.OcrRawData = ocrResult
+								data, err = json.Marshal(streamResponse)
 								if err != nil {
 									common.SysError("error marshalling stream response: " + err.Error())
 									return
@@ -315,6 +316,7 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 								break
 							}
 						}
+					}
 				}
 			}
 			stopChan <- true
