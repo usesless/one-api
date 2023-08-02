@@ -105,7 +105,6 @@ type OpenAIErrorWithStatusCode struct {
 type TextResponse struct {
 	Usage `json:"usage"`
 	Error OpenAIError `json:"error"`
-	// OcrRawData string      `json:"ocr_raw_data"`
 }
 
 type OpenAITextResponseChoice struct {
@@ -115,11 +114,13 @@ type OpenAITextResponseChoice struct {
 }
 
 type OpenAITextResponse struct {
-	Id      string                     `json:"id"`
-	Object  string                     `json:"object"`
-	Created int64                      `json:"created"`
-	Choices []OpenAITextResponseChoice `json:"choices"`
-	Usage   `json:"usage"`
+	Id         string                     `json:"id"`
+	Object     string                     `json:"object"`
+	Created    int64                      `json:"created"`
+	Choices    []OpenAITextResponseChoice `json:"choices"`
+	Usage      `json:"usage"`
+	Error      OpenAIError `json:"error"`
+	OcrRawData string      `json:"ocr_raw_data"`
 }
 
 type OpenAIEmbeddingResponseItem struct {
