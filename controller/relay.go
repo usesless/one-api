@@ -106,6 +106,7 @@ type ChatCompletionsStreamResponse struct {
 		} `json:"delta"`
 		FinishReason string `json:"finish_reason"`
 	} `json:"choices"`
+	OcrRawData string `json:"ocr_raw_data"`
 }
 
 type CompletionsStreamResponse struct {
@@ -113,6 +114,7 @@ type CompletionsStreamResponse struct {
 		Text         string `json:"text"`
 		FinishReason string `json:"finish_reason"`
 	} `json:"choices"`
+	OcrRawData string `json:"ocr_raw_data"`
 }
 
 func Relay(c *gin.Context) {

@@ -283,6 +283,9 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 						}
 						for _, choice := range streamResponse.Choices {
 							streamResponseText += choice.Delta.Content
+							if strings.Contains(choice.FinishReason, `stop`) {
+								streamResponse.OcrRawData = ocrResult
+							}
 						}
 					case RelayModeCompletions:
 						var streamResponse CompletionsStreamResponse
@@ -293,6 +296,9 @@ func relayTextHelper(c *gin.Context, relayMode int) *OpenAIErrorWithStatusCode {
 						}
 						for _, choice := range streamResponse.Choices {
 							streamResponseText += choice.Text
+							if strings.Contains(choice.FinishReason, `stop`) {
+								streamResponse.OcrRawData = ocrResult
+							}
 						}
 					}
 				}
