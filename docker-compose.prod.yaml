@@ -12,7 +12,7 @@ services:
       - ./data:/data
       - ./logs:/app/logs
     environment:
-      REDIS_CONN_STRING: redis://10.0.4.2:26379/1
+      REDIS_CONN_STRING: redis://10.0.4.10:26379/1
       SESSION_SECRET: session-m3jp2lcRUiYb5rMUlx
       SQL_DSN: root:pscale_pw_9da27mIUaHPMNnIXborrDWFI5v5pCTjp8m1NKrwsh4G@tcp(10.10.0.11:3306)/oneapi
     # healthcheck:

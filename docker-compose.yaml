@@ -44,6 +44,6 @@ services:
       - ./data:/data
       - ./logs:/app/logs
     environment:
-      REDIS_CONN_STRING: redis://10.0.4.2:16379/1
+      REDIS_CONN_STRING: redis://10.0.4.10:26379/2
       SESSION_SECRET: session-m3jp2lcRUiYb5rMUlx
-      SQL_DSN: root:Abc123456@tcp(10.0.4.2:13306)/oneapi
+      SQL_DSN: root:Abc123456@tcp(10.0.4.10:13306)/oneapi
